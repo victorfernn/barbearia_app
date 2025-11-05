@@ -1,0 +1,16 @@
+* text=auto
+
+# Enforce LF on source files
+*.dart eol=lf
+*.kt eol=lf
+*.kts eol=lf
+*.gradle eol=lf
+*.groovy eol=lf
+*.java eol=lf
+*.yml eol=lf
+*.yaml eol=lf
+*.md eol=lf
+*.sh eol=lf
+
+# Keep Windows batch files with CRLF
+*.bat eol=crlf
