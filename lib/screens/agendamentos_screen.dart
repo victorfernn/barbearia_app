@@ -164,20 +164,25 @@ class _AgendamentosScreenState extends State<AgendamentosScreen> {
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         leading: CircleAvatar(
+          radius: 24,
           backgroundColor: _getStatusColor(agendamento.status),
-          child: const Icon(Icons.person, color: Colors.white),
+          child: const Icon(Icons.person, color: Colors.white, size: 24),
         ),
         title: Text(agendamento.clienteNome ?? 'Cliente não informado'),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            const SizedBox(height: 4),
             Text('Serviço: ${agendamento.servicoNome}'),
             Text('Horário: ${agendamento.horaInicio} - ${agendamento.horaFim}'),
             Text('Valor: ${agendamento.valorFormatado}'),
           ],
         ),
         trailing: PopupMenuButton<String>(
+          padding: EdgeInsets.zero,
+          icon: const Icon(Icons.more_vert),
           onSelected: (value) => _handleMenuAction(value, agendamento),
           itemBuilder: (context) => [
             const PopupMenuItem(

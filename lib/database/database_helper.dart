@@ -307,21 +307,27 @@ class DatabaseHelper {
         ) ??
         0;
 
-    final receitaMes =
-        Sqflite.firstIntValue(
-          await db.rawQuery('''
-        SELECT SUM(s.preco) FROM agendamentos a 
-        JOIN servicos s ON a.servico_id = s.id 
-        WHERE strftime('%Y-%m', a.data_agendamento) = strftime('%Y-%m', 'now')
-        AND a.status = 'concluido'
-      '''),
-        ) ??
-        0;
+    // Calcular receita do mês atual
+    final inicioMes = DateTime(hoje.year, hoje.month, 1);
+    final fimMes = DateTime(hoje.year, hoje.month + 1, 0);
+    final inicioMesStr = inicioMes.toIso8601String().substring(0, 10);
+    final fimMesStr = fimMes.toIso8601String().substring(0, 10);
+
+    final receitaMesResult = await db.rawQuery('''
+      SELECT SUM(COALESCE(a.valor_total, s.preco)) as total 
+      FROM agendamentos a 
+      JOIN servicos s ON a.servico_id = s.id 
+      WHERE a.data_agendamento >= ? 
+      AND a.data_agendamento <= ?
+      AND a.status = 'concluido'
+    ''', [inicioMesStr, fimMesStr]);
+
+    final receitaMes = (receitaMesResult.first['total'] as num?)?.toDouble() ?? 0.0;
 
     return {
       'totalClientes': totalClientes,
       'agendamentosHoje': agendamentosHoje,
-      'receitaMes': receitaMes.toDouble(),
+      'receitaMes': receitaMes,
     };
   }
 }

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_provider.dart';
 import '../services/weather_service.dart';
+import '../models/agendamento.dart';
+import '../main.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -17,6 +19,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void initState() {
     super.initState();
     _loadWeatherData();
+    _loadDashboardData();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Recarregar dados sempre que a tela for exibida
+    _loadDashboardData();
+  }
+
+  Future<void> _loadDashboardData() async {
+    await Provider.of<AppProvider>(
+      context,
+      listen: false,
+    ).loadDashboardData();
   }
 
   Future<void> _loadWeatherData() async {
@@ -32,10 +49,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Scaffold(
       body: RefreshIndicator(
         onRefresh: () async {
-          await Provider.of<AppProvider>(
-            context,
-            listen: false,
-          ).loadDashboardData();
+          await _loadDashboardData();
           await _loadWeatherData();
         },
         child: SingleChildScrollView(
@@ -258,7 +272,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   () => _navigateToScreen(4),
                 ),
                 _buildQuickActionButton(
-                  'Localização',
+                  'Ver\nLocalização',
                   Icons.location_on,
                   Colors.red,
                   () => _navigateToScreen(5),
@@ -337,6 +351,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 else
                   ...recentAppointments.map(
                     (appointment) => ListTile(
+                      onTap: () => _showAgendamentoDetails(appointment),
                       leading: CircleAvatar(
                         backgroundColor: _getStatusColor(appointment.status),
                         child: const Icon(
@@ -389,14 +404,72 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   void _navigateToScreen(int index) {
-    // Navegar para a tela correspondente via HomeScreen
-    final homeState = context.findAncestorStateOfType<State>();
-    if (homeState != null && homeState.mounted) {
-      // Aqui você implementaria a navegação ou comunicação com o HomeScreen
-      // Por simplicidade, vamos apenas mostrar um SnackBar
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Navegando para tela ${index + 1}')),
-      );
-    }
+    // Usar o GlobalKey do HomeScreen para trocar de aba
+    homeScreenKey.currentState?.navigateToTab(index);
+  }
+
+  void _showAgendamentoDetails(Agendamento agendamento) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(agendamento.clienteNome ?? 'Agendamento'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildDetailRow('Serviço', agendamento.servicoNome ?? 'N/A'),
+              const SizedBox(height: 8),
+              _buildDetailRow('Data', agendamento.dataFormatada),
+              const SizedBox(height: 8),
+              _buildDetailRow(
+                'Horário',
+                '${agendamento.horaInicio} - ${agendamento.horaFim}',
+              ),
+              const SizedBox(height: 8),
+              _buildDetailRow('Status', agendamento.statusFormatado),
+              const SizedBox(height: 8),
+              _buildDetailRow('Valor', agendamento.valorFormatado),
+              if (agendamento.observacoes != null &&
+                  agendamento.observacoes!.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                _buildDetailRow('Observações', agendamento.observacoes!),
+              ],
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Fechar'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _navigateToScreen(1);
+            },
+            child: const Text('Ver Todos'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 100,
+          child: Text(
+            '$label:',
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+        ),
+        Expanded(
+          child: Text(value),
+        ),
+      ],
+    );
   }
 }

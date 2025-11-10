@@ -7,7 +7,7 @@ class WeatherService {
   // Usando OpenWeatherMap API (gratuita)
   static const String _baseUrl = 'https://api.openweathermap.org/data/2.5';
   static const String _apiKey =
-      'SUA_API_KEY_AQUI'; // Substitua por uma chave válida
+      'f9f66b2ed55eec9cbfb2744e8176e789'; // API Key OpenWeatherMap
 
   static Future<Map<String, dynamic>?> obterClimaPorCidade(
     String cidade,
@@ -199,22 +199,22 @@ class WeatherService {
   // Método para obter dados fictícios quando não há API key válida
   static Map<String, dynamic> obterDadosFicticios() {
     return {
-      'cidade': 'São Paulo',
+      'cidade': 'Salvador',
       'pais': 'BR',
-      'temperatura': 23,
-      'sensacao_termica': 25,
-      'temp_min': 18,
-      'temp_max': 28,
-      'humidade': 65,
+      'temperatura': 28,
+      'sensacao_termica': 31,
+      'temp_min': 25,
+      'temp_max': 32,
+      'humidade': 75,
       'pressao': 1013,
-      'descricao': 'Parcialmente nublado',
-      'icone': '02d',
-      'velocidade_vento': 3.5,
-      'direcao_vento': 180,
-      'nuvens': 40,
+      'descricao': 'Ensolarado',
+      'icone': '01d',
+      'velocidade_vento': 4.5,
+      'direcao_vento': 90,
+      'nuvens': 15,
       'visibilidade': 10000,
-      'nascer_sol': DateTime.now().copyWith(hour: 6, minute: 30),
-      'por_sol': DateTime.now().copyWith(hour: 18, minute: 45),
+      'nascer_sol': DateTime.now().copyWith(hour: 5, minute: 30),
+      'por_sol': DateTime.now().copyWith(hour: 18, minute: 15),
     };
   }
 }

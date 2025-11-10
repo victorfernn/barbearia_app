@@ -6,6 +6,10 @@ import 'screens/login_screen.dart';
 import 'screens/home_screen.dart';
 import 'providers/app_provider.dart';
 
+// GlobalKey para acessar o HomeScreen de qualquer lugar
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+final GlobalKey<HomeScreenState> homeScreenKey = GlobalKey<HomeScreenState>();
+
 void main() {
   // Inicializar SQLite para desktop
   if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
@@ -64,7 +68,7 @@ class BarbeariaApp extends StatelessWidget {
         initialRoute: '/login',
         routes: {
           '/login': (context) => const LoginScreen(),
-          '/home': (context) => const HomeScreen(),
+          '/home': (context) => HomeScreen(key: homeScreenKey),
         },
       ),
     );

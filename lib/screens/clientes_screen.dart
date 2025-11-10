@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../providers/app_provider.dart';
@@ -103,13 +104,16 @@ class _ClientesScreenState extends State<ClientesScreen> {
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         leading: CircleAvatar(
+          radius: 24,
           backgroundColor: Theme.of(context).primaryColor,
           child: Text(
             cliente.nome.isNotEmpty ? cliente.nome[0].toUpperCase() : 'C',
             style: const TextStyle(
               color: Colors.white,
               fontWeight: FontWeight.bold,
+              fontSize: 20,
             ),
           ),
         ),
@@ -120,6 +124,7 @@ class _ClientesScreenState extends State<ClientesScreen> {
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            const SizedBox(height: 4),
             Row(
               children: [
                 const Icon(Icons.phone, size: 16, color: Colors.grey),
@@ -150,6 +155,8 @@ class _ClientesScreenState extends State<ClientesScreen> {
           ],
         ),
         trailing: PopupMenuButton<String>(
+          padding: EdgeInsets.zero,
+          icon: const Icon(Icons.more_vert),
           onSelected: (value) => _handleMenuAction(value, cliente),
           itemBuilder: (context) => [
             const PopupMenuItem(
@@ -373,11 +380,20 @@ class _ClienteFormDialogState extends State<ClienteFormDialog> {
                   decoration: const InputDecoration(
                     labelText: 'Telefone *',
                     prefixIcon: Icon(Icons.phone),
+                    hintText: '(00) 0 0000-0000',
                   ),
                   keyboardType: TextInputType.phone,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    _TelefoneInputFormatter(),
+                  ],
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Telefone é obrigatório';
+                    }
+                    final digitsOnly = value.replaceAll(RegExp(r'\D'), '');
+                    if (digitsOnly.length < 10 || digitsOnly.length > 11) {
+                      return 'Telefone inválido';
                     }
                     return null;
                   },
@@ -545,5 +561,54 @@ class _ClienteFormDialogState extends State<ClienteFormDialog> {
 
       Navigator.pop(context);
     }
+  }
+}
+
+/// Formatter para máscara de telefone (00) 0 0000-0000
+class _TelefoneInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final text = newValue.text;
+    final digitsOnly = text.replaceAll(RegExp(r'\D'), '');
+
+    if (digitsOnly.isEmpty) {
+      return newValue.copyWith(text: '');
+    }
+
+    String formatted = '';
+    
+    // Adiciona o DDD
+    if (digitsOnly.length >= 1) {
+      formatted = '(${digitsOnly.substring(0, digitsOnly.length >= 2 ? 2 : 1)}';
+    }
+    
+    if (digitsOnly.length >= 3) {
+      formatted += ') ${digitsOnly[2]}';
+    }
+    
+    // Adiciona o resto do número
+    if (digitsOnly.length >= 4) {
+      final restLength = digitsOnly.length - 3;
+      final rest = digitsOnly.substring(3);
+      
+      if (restLength <= 4) {
+        // Formato (00) 0 0000
+        formatted += ' ${rest}';
+      } else {
+        // Formato (00) 0 0000-0000
+        formatted += ' ${rest.substring(0, 4)}';
+        if (restLength > 4) {
+          formatted += '-${rest.substring(4, restLength > 8 ? 8 : restLength)}';
+        }
+      }
+    }
+
+    return TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
+    );
   }
 }

@@ -100,13 +100,15 @@ class _ServicosScreenState extends State<ServicosScreen> {
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
-        leading: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(8),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        leading: CircleAvatar(
+          radius: 24,
+          backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+          child: Icon(
+            Icons.content_cut,
+            color: Theme.of(context).primaryColor,
+            size: 24,
           ),
-          child: Icon(Icons.content_cut, color: Theme.of(context).primaryColor),
         ),
         title: Text(
           servico.nome,
@@ -115,8 +117,10 @@ class _ServicosScreenState extends State<ServicosScreen> {
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (servico.descricao != null && servico.descricao!.isNotEmpty)
+            if (servico.descricao != null && servico.descricao!.isNotEmpty) ...[
+              const SizedBox(height: 4),
               Text(servico.descricao!),
+            ],
             const SizedBox(height: 4),
             Row(
               children: [
@@ -145,6 +149,8 @@ class _ServicosScreenState extends State<ServicosScreen> {
           ],
         ),
         trailing: PopupMenuButton<String>(
+          padding: EdgeInsets.zero,
+          icon: const Icon(Icons.more_vert),
           onSelected: (value) => _handleMenuAction(value, servico),
           itemBuilder: (context) => [
             const PopupMenuItem(

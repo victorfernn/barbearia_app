@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../providers/app_provider.dart';
 import '../models/agendamento.dart';
+import '../models/cliente.dart';
 import '../services/report_service.dart';
 
 class RelatoriosScreen extends StatefulWidget {
@@ -16,7 +17,7 @@ class _RelatoriosScreenState extends State<RelatoriosScreen> {
   DateTime _dataInicio = DateTime.now().subtract(const Duration(days: 30));
   DateTime _dataFim = DateTime.now();
   String _tipoRelatorio = 'agendamentos';
-  List<Agendamento> _relatorioData = [];
+  List<dynamic> _relatorioData = [];
   bool _isLoadingRelatorio = false;
 
   @override
@@ -193,16 +194,44 @@ class _RelatoriosScreenState extends State<RelatoriosScreen> {
   Widget _buildReportSummary() {
     if (_relatorioData.isEmpty) return const SizedBox.shrink();
 
-    final totalAgendamentos = _relatorioData.length;
-    final totalReceita = _relatorioData
+    if (_tipoRelatorio == 'clientes') {
+      return Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Resumo do Relatório',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 16),
+              _buildSummaryCard(
+                'Total de Clientes',
+                _relatorioData.length.toString(),
+                Icons.people,
+                Colors.blue,
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // Para agendamentos, receita e serviços
+    final agendamentos = _relatorioData.cast<Agendamento>();
+    final totalAgendamentos = agendamentos.length;
+    final totalReceita = agendamentos
         .where((a) => a.status == 'concluido')
         .fold(0.0, (sum, a) => sum + (a.valorTotal ?? a.servicoPreco ?? 0.0));
 
-    final agendamentosConcluidos = _relatorioData
+    final agendamentosConcluidos = agendamentos
         .where((a) => a.status == 'concluido')
         .length;
 
-    final agendamentosCancelados = _relatorioData
+    final agendamentosCancelados = agendamentos
         .where((a) => a.status == 'cancelado')
         .length;
 
@@ -213,7 +242,7 @@ class _RelatoriosScreenState extends State<RelatoriosScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Resumo do Período',
+              _tipoRelatorio == 'receita' ? 'Resumo Financeiro' : 'Resumo do Período',
               style: Theme.of(
                 context,
               ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
@@ -347,65 +376,115 @@ class _RelatoriosScreenState extends State<RelatoriosScreen> {
               ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: _relatorioData.length > 10
-                  ? 10
-                  : _relatorioData.length,
-              itemBuilder: (context, index) {
-                final agendamento = _relatorioData[index];
-                return ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor: _getStatusColor(agendamento.status),
-                    child: const Icon(
-                      Icons.person,
-                      color: Colors.white,
-                      size: 16,
-                    ),
-                  ),
-                  title: Text(
-                    agendamento.clienteNome ?? 'Cliente não informado',
-                  ),
-                  subtitle: Text(
-                    '${agendamento.servicoNome} - ${agendamento.dataFormatada}',
-                  ),
-                  trailing: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        agendamento.valorFormatado,
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.green.shade600,
-                        ),
-                      ),
-                      Text(
-                        agendamento.statusFormatado,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: _getStatusColor(agendamento.status),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-            if (_relatorioData.length > 10) ...[
-              const Divider(),
-              Text(
-                '... e mais ${_relatorioData.length - 10} registros',
-                style: Theme.of(
-                  context,
-                ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
-                textAlign: TextAlign.center,
-              ),
-            ],
+            if (_tipoRelatorio == 'clientes')
+              _buildClientesList()
+            else
+              _buildAgendamentosList(),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildClientesList() {
+    final clientes = _relatorioData.cast<Cliente>();
+    final displayCount = clientes.length > 10 ? 10 : clientes.length;
+    
+    return Column(
+      children: [
+        ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: displayCount,
+          itemBuilder: (context, index) {
+            final cliente = clientes[index];
+            return ListTile(
+              leading: const CircleAvatar(
+                backgroundColor: Colors.blue,
+                child: Icon(Icons.person, color: Colors.white, size: 16),
+              ),
+              title: Text(cliente.nome),
+              subtitle: Text('${cliente.telefone}${cliente.email != null ? ' • ${cliente.email}' : ''}'),
+              trailing: cliente.createdAt != null
+                  ? Text(
+                      DateFormat('dd/MM/yyyy').format(cliente.createdAt!),
+                      style: const TextStyle(fontSize: 12),
+                    )
+                  : null,
+            );
+          },
+        ),
+        if (clientes.length > 10) ...[
+          const Divider(),
+          Text(
+            '... e mais ${clientes.length - 10} clientes',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildAgendamentosList() {
+    final agendamentos = _relatorioData.cast<Agendamento>();
+    final displayCount = agendamentos.length > 10 ? 10 : agendamentos.length;
+    
+    return Column(
+      children: [
+        ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: displayCount,
+          itemBuilder: (context, index) {
+            final agendamento = agendamentos[index];
+            return ListTile(
+              leading: CircleAvatar(
+                backgroundColor: _getStatusColor(agendamento.status),
+                child: const Icon(
+                  Icons.person,
+                  color: Colors.white,
+                  size: 16,
+                ),
+              ),
+              title: Text(
+                agendamento.clienteNome ?? 'Cliente não informado',
+              ),
+              subtitle: Text(
+                '${agendamento.servicoNome} - ${agendamento.dataFormatada}',
+              ),
+              trailing: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    agendamento.valorFormatado,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.green.shade600,
+                    ),
+                  ),
+                  Text(
+                    agendamento.statusFormatado,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: _getStatusColor(agendamento.status),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+        if (agendamentos.length > 10) ...[
+          const Divider(),
+          Text(
+            '... e mais ${agendamentos.length - 10} registros',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ],
     );
   }
 
@@ -460,14 +539,25 @@ class _RelatoriosScreenState extends State<RelatoriosScreen> {
 
     try {
       final appProvider = Provider.of<AppProvider>(context, listen: false);
-      final relatorioData = await appProvider.getRelatorioAgendamentos(
-        _dataInicio,
-        _dataFim,
-      );
-
-      setState(() {
-        _relatorioData = relatorioData;
-      });
+      
+      switch (_tipoRelatorio) {
+        case 'agendamentos':
+        case 'receita':
+        case 'servicos':
+          final agendamentos = await appProvider.getRelatorioAgendamentos(
+            _dataInicio,
+            _dataFim,
+          );
+          setState(() {
+            _relatorioData = agendamentos;
+          });
+          break;
+        case 'clientes':
+          setState(() {
+            _relatorioData = appProvider.clientes;
+          });
+          break;
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(
@@ -489,13 +579,36 @@ class _RelatoriosScreenState extends State<RelatoriosScreen> {
 
       final periodo =
           '${DateFormat('dd/MM/yyyy').format(_dataInicio)} a ${DateFormat('dd/MM/yyyy').format(_dataFim)}';
-      final filePath = await ReportService.generateAgendamentosPDF(
-        _relatorioData,
-        periodo,
-      );
+      String? filePath;
+
+      switch (_tipoRelatorio) {
+        case 'agendamentos':
+          filePath = await ReportService.generateAgendamentosPDF(
+            _relatorioData as List<Agendamento>,
+            periodo,
+          );
+          break;
+        case 'receita':
+          filePath = await ReportService.generateReceitaPDF(
+            _relatorioData as List<Agendamento>,
+            periodo,
+          );
+          break;
+        case 'servicos':
+          filePath = await ReportService.generateServicosPDF(
+            _relatorioData as List<Agendamento>,
+            periodo,
+          );
+          break;
+        case 'clientes':
+          filePath = await ReportService.generateClientesPDF(
+            _relatorioData.cast<Cliente>(),
+          );
+          break;
+      }
 
       if (filePath != null) {
-        await ReportService.shareFile(filePath, 'relatorio_agendamentos.pdf');
+        await ReportService.shareFile(filePath, 'relatorio_${_tipoRelatorio}.pdf');
       } else {
         throw Exception('Erro ao gerar arquivo PDF');
       }
@@ -516,13 +629,36 @@ class _RelatoriosScreenState extends State<RelatoriosScreen> {
 
       final periodo =
           '${DateFormat('dd/MM/yyyy').format(_dataInicio)} a ${DateFormat('dd/MM/yyyy').format(_dataFim)}';
-      final filePath = await ReportService.generateAgendamentosExcel(
-        _relatorioData,
-        periodo,
-      );
+      String? filePath;
+
+      switch (_tipoRelatorio) {
+        case 'agendamentos':
+          filePath = await ReportService.generateAgendamentosExcel(
+            _relatorioData as List<Agendamento>,
+            periodo,
+          );
+          break;
+        case 'receita':
+          filePath = await ReportService.generateReceitaExcel(
+            _relatorioData as List<Agendamento>,
+            periodo,
+          );
+          break;
+        case 'servicos':
+          filePath = await ReportService.generateServicosExcel(
+            _relatorioData as List<Agendamento>,
+            periodo,
+          );
+          break;
+        case 'clientes':
+          filePath = await ReportService.generateClientesExcel(
+            _relatorioData.cast<Cliente>(),
+          );
+          break;
+      }
 
       if (filePath != null) {
-        await ReportService.shareFile(filePath, 'relatorio_agendamentos.xlsx');
+        await ReportService.shareFile(filePath, 'relatorio_${_tipoRelatorio}.xlsx');
       } else {
         throw Exception('Erro ao gerar arquivo Excel');
       }

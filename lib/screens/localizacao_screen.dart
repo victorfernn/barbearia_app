@@ -17,6 +17,7 @@ class _LocalizacaoScreenState extends State<LocalizacaoScreen> {
   bool _isLoadingLocation = false;
   String? _locationError;
   Map<String, dynamic>? _weatherData;
+  String? _currentAddress;
 
   @override
   void initState() {
@@ -229,14 +230,12 @@ class _LocalizacaoScreenState extends State<LocalizacaoScreen> {
                     const SizedBox(height: 8),
                     Row(
                       children: [
+                        const Icon(Icons.location_on, size: 16, color: Colors.grey),
+                        const SizedBox(width: 4),
                         Expanded(
                           child: Text(
-                            'Lat: ${_currentPosition!.latitude.toStringAsFixed(6)}',
-                          ),
-                        ),
-                        Expanded(
-                          child: Text(
-                            'Lng: ${_currentPosition!.longitude.toStringAsFixed(6)}',
+                            _currentAddress ?? 'Obtendo endereço...',
+                            style: const TextStyle(fontSize: 14),
                           ),
                         ),
                       ],
@@ -488,10 +487,15 @@ class _LocalizacaoScreenState extends State<LocalizacaoScreen> {
 
       if (position != null) {
         final distance = await LocationService.getDistanceToBarbearia();
+        final address = await LocationService.getAddressFromCoordinates(
+          position.latitude,
+          position.longitude,
+        );
 
         setState(() {
           _currentPosition = position;
           _distanceToBarbearia = distance;
+          _currentAddress = address ?? 'Endereço não disponível';
         });
       } else {
         setState(() {

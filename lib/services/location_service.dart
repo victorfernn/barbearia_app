@@ -1,4 +1,5 @@
 import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:logger/logger.dart';
 
 class LocationService {
@@ -36,6 +37,27 @@ class LocationService {
       _logger.e('Erro ao obter localização: $e');
       return null;
     }
+  }
+
+  // Converter coordenadas em endereço legível
+  static Future<String?> getAddressFromCoordinates(
+    double latitude,
+    double longitude,
+  ) async {
+    try {
+      List<Placemark> placemarks = await placemarkFromCoordinates(
+        latitude,
+        longitude,
+      );
+
+      if (placemarks.isNotEmpty) {
+        Placemark place = placemarks[0];
+        return '${place.street ?? ''}, ${place.subLocality ?? ''} - ${place.locality ?? ''}, ${place.administrativeArea ?? ''}';
+      }
+    } catch (e) {
+      _logger.e('Erro ao obter endereço: $e');
+    }
+    return null;
   }
 
   static Future<double> getDistanceBetween(
@@ -87,17 +109,17 @@ class LocationService {
     await Geolocator.openLocationSettings();
   }
 
-  // Coordenadas da barbearia (exemplo - substitua pelas coordenadas reais)
-  static const double barbeariaLatitude = -23.5505; // São Paulo
-  static const double barbeariaLongitude = -46.6333; // São Paulo
+  // Coordenadas da barbearia (Imbuí, Salvador-BA)
+  static const double barbeariaLatitude = -12.9704; // Salvador - Imbuí
+  static const double barbeariaLongitude = -38.4540; // Salvador - Imbuí
 
   static Future<Map<String, dynamic>> getBarbeariaLocation() async {
     return {
       'latitude': barbeariaLatitude,
       'longitude': barbeariaLongitude,
       'nome': 'Barbearia Premium',
-      'endereco': 'Rua das Flores, 123 - Centro, São Paulo - SP',
-      'telefone': '(11) 99999-9999',
+      'endereco': 'Rua Silveira Martins, 456 - Imbuí, Salvador - BA',
+      'telefone': '(71) 99999-9999',
       'horario': 'Segunda a Sábado: 8h às 20h',
     };
   }
