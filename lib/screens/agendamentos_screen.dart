@@ -558,6 +558,20 @@ class _AgendamentoFormDialogState extends State<AgendamentoFormDialog> {
 
   void _saveAgendamento() {
     if (_formKey.currentState!.validate()) {
+      // Validar se hora fim é maior que hora início
+      final inicioMinutes = _horaInicio.hour * 60 + _horaInicio.minute;
+      final fimMinutes = _horaFim.hour * 60 + _horaFim.minute;
+      
+      if (fimMinutes <= inicioMinutes) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('O horário de término deve ser maior que o horário de início'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+      
       final agendamento = Agendamento(
         id: widget.agendamento?.id,
         clienteId: _selectedCliente!.id!,

@@ -343,6 +343,7 @@ class _ClienteFormDialogState extends State<ClienteFormDialog> {
       _nomeController.text = widget.cliente!.nome;
       _telefoneController.text = widget.cliente!.telefone;
       _emailController.text = widget.cliente!.email ?? '';
+      _cepController.text = widget.cliente!.cep ?? '';
       _enderecoController.text = widget.cliente!.endereco ?? '';
       _observacoesController.text = widget.cliente!.observacoes ?? '';
       _dataNascimento = widget.cliente!.dataNascimento;
@@ -427,8 +428,13 @@ class _ClienteFormDialogState extends State<ClienteFormDialog> {
                         decoration: const InputDecoration(
                           labelText: 'CEP',
                           prefixIcon: Icon(Icons.location_city),
+                          hintText: '00000-000',
                         ),
                         keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                          _CepInputFormatter(),
+                        ],
                         onChanged: (value) {
                           if (value.replaceAll(RegExp(r'\D'), '').length == 8) {
                             _buscarCep(value);
@@ -544,6 +550,7 @@ class _ClienteFormDialogState extends State<ClienteFormDialog> {
         nome: _nomeController.text,
         telefone: _telefoneController.text,
         email: _emailController.text.isEmpty ? null : _emailController.text,
+        cep: _cepController.text.isEmpty ? null : _cepController.text,
         endereco: _enderecoController.text.isEmpty
             ? null
             : _enderecoController.text,
@@ -604,6 +611,35 @@ class _TelefoneInputFormatter extends TextInputFormatter {
           formatted += '-${rest.substring(4, restLength > 8 ? 8 : restLength)}';
         }
       }
+    }
+
+    return TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
+    );
+  }
+}
+
+/// Formatter para máscara de CEP 00000-000
+class _CepInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final text = newValue.text;
+    final digitsOnly = text.replaceAll(RegExp(r'\D'), '');
+
+    if (digitsOnly.isEmpty) {
+      return newValue.copyWith(text: '');
+    }
+
+    String formatted = '';
+    
+    if (digitsOnly.length <= 5) {
+      formatted = digitsOnly;
+    } else {
+      formatted = '${digitsOnly.substring(0, 5)}-${digitsOnly.substring(5, digitsOnly.length > 8 ? 8 : digitsOnly.length)}';
     }
 
     return TextEditingValue(

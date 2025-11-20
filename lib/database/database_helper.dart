@@ -19,7 +19,19 @@ class DatabaseHelper {
 
   Future<Database> _initDatabase() async {
     String path = join(await getDatabasesPath(), 'barbearia.db');
-    return await openDatabase(path, version: 1, onCreate: _onCreate);
+    return await openDatabase(
+      path,
+      version: 2,
+      onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
+    );
+  }
+
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      // Adicionar coluna CEP na tabela clientes
+      await db.execute('ALTER TABLE clientes ADD COLUMN cep TEXT');
+    }
   }
 
   Future<void> _onCreate(Database db, int version) async {
@@ -30,6 +42,7 @@ class DatabaseHelper {
         nome TEXT NOT NULL,
         telefone TEXT NOT NULL,
         email TEXT,
+        cep TEXT,
         endereco TEXT,
         data_nascimento TEXT,
         observacoes TEXT,

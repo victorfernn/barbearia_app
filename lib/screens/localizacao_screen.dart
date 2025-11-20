@@ -470,10 +470,27 @@ class _LocalizacaoScreenState extends State<LocalizacaoScreen> {
   }
 
   Future<void> _loadWeatherData() async {
-    final weather = WeatherService.obterDadosFicticios();
-    setState(() {
-      _weatherData = weather;
-    });
+    try {
+      // Tenta buscar dados reais da API
+      final weather = await WeatherService.obterClimaPorCidade('Salvador,BR');
+      if (weather != null && mounted) {
+        setState(() {
+          _weatherData = weather;
+        });
+      } else {
+        // Se falhar, usa dados fictícios
+        setState(() {
+          _weatherData = WeatherService.obterDadosFicticios();
+        });
+      }
+    } catch (e) {
+      // Em caso de erro, usa dados fictícios
+      if (mounted) {
+        setState(() {
+          _weatherData = WeatherService.obterDadosFicticios();
+        });
+      }
+    }
   }
 
   Future<void> _getCurrentLocation() async {

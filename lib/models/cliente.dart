@@ -3,6 +3,7 @@ class Cliente {
   final String nome;
   final String telefone;
   final String? email;
+  final String? cep;
   final String? endereco;
   final DateTime? dataNascimento;
   final String? observacoes;
@@ -13,6 +14,7 @@ class Cliente {
     required this.nome,
     required this.telefone,
     this.email,
+    this.cep,
     this.endereco,
     this.dataNascimento,
     this.observacoes,
@@ -25,6 +27,7 @@ class Cliente {
       'nome': nome,
       'telefone': telefone,
       'email': email,
+      'cep': cep,
       'endereco': endereco,
       'data_nascimento': dataNascimento?.toIso8601String(),
       'observacoes': observacoes,
@@ -39,6 +42,7 @@ class Cliente {
       nome: map['nome'] ?? '',
       telefone: map['telefone'] ?? '',
       email: map['email'],
+      cep: map['cep'],
       endereco: map['endereco'],
       dataNascimento: map['data_nascimento'] != null
           ? DateTime.tryParse(map['data_nascimento'])
@@ -55,6 +59,7 @@ class Cliente {
     String? nome,
     String? telefone,
     String? email,
+    String? cep,
     String? endereco,
     DateTime? dataNascimento,
     String? observacoes,
@@ -65,6 +70,7 @@ class Cliente {
       nome: nome ?? this.nome,
       telefone: telefone ?? this.telefone,
       email: email ?? this.email,
+      cep: cep ?? this.cep,
       endereco: endereco ?? this.endereco,
       dataNascimento: dataNascimento ?? this.dataNascimento,
       observacoes: observacoes ?? this.observacoes,

@@ -37,11 +37,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<void> _loadWeatherData() async {
-    // Usar dados fictícios se não houver API key configurada
-    final weather = WeatherService.obterDadosFicticios();
-    setState(() {
-      weatherData = weather;
-    });
+    try {
+      // Tenta buscar dados reais da API
+      final weather = await WeatherService.obterClimaPorCidade('Salvador,BR');
+      if (weather != null && mounted) {
+        setState(() {
+          weatherData = weather;
+        });
+      } else {
+        // Se falhar, usa dados fictícios
+        if (mounted) {
+          setState(() {
+            weatherData = WeatherService.obterDadosFicticios();
+          });
+        }
+      }
+    } catch (e) {
+      // Em caso de erro, usa dados fictícios
+      if (mounted) {
+        setState(() {
+          weatherData = WeatherService.obterDadosFicticios();
+        });
+      }
+    }
   }
 
   @override
