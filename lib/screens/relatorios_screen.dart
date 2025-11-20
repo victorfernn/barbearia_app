@@ -608,7 +608,7 @@ class _RelatoriosScreenState extends State<RelatoriosScreen> {
       }
 
       if (filePath != null) {
-        await ReportService.shareFile(filePath, 'relatorio_${_tipoRelatorio}.pdf');
+        await ReportService.shareFile(filePath, 'relatorio_$_tipoRelatorio.pdf');
       } else {
         throw Exception('Erro ao gerar arquivo PDF');
       }
@@ -658,7 +658,7 @@ class _RelatoriosScreenState extends State<RelatoriosScreen> {
       }
 
       if (filePath != null) {
-        await ReportService.shareFile(filePath, 'relatorio_${_tipoRelatorio}.xlsx');
+        await ReportService.shareFile(filePath, 'relatorio_$_tipoRelatorio.xlsx');
       } else {
         throw Exception('Erro ao gerar arquivo Excel');
       }

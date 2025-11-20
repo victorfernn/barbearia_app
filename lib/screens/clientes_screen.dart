@@ -588,7 +588,7 @@ class _TelefoneInputFormatter extends TextInputFormatter {
     String formatted = '';
     
     // Adiciona o DDD
-    if (digitsOnly.length >= 1) {
+    if (digitsOnly.isNotEmpty) {
       formatted = '(${digitsOnly.substring(0, digitsOnly.length >= 2 ? 2 : 1)}';
     }
     
@@ -603,7 +603,7 @@ class _TelefoneInputFormatter extends TextInputFormatter {
       
       if (restLength <= 4) {
         // Formato (00) 0 0000
-        formatted += ' ${rest}';
+        formatted += ' $rest';
       } else {
         // Formato (00) 0 0000-0000
         formatted += ' ${rest.substring(0, 4)}';
